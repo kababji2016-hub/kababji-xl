@@ -14,7 +14,39 @@
   --danger:#c62828;--warn-bg:#fff8e1;--warn:#f57f17;
   --row-py:7px;--font-size-table:13px;
 }
-body.compact{--row-py:3px;--font-size-table:12px;}
+/* ── COMPACT MODE ── */
+body.compact{--row-py:1px;--font-size-table:11px;}
+body.compact .items{gap:0;}
+body.compact .item-card{border-radius:0;border-bottom:none;box-shadow:none!important;margin:0;}
+body.compact .item-card:last-child{border-bottom:1px solid var(--line);}
+body.compact .item-card:hover{box-shadow:none!important;}
+/* Remove colored header bg in compact, replace with bold text row */
+body.compact .item-head{
+  background:transparent!important;
+  color:var(--ink)!important;
+  padding:3px 8px;
+  border-bottom:1px solid var(--line);
+}
+body.compact .item-head .item-name{
+  font-size:12px;font-weight:700;color:var(--ink);
+}
+body.compact .item-head .item-code{
+  font-size:10px;color:var(--muted);opacity:1;display:inline;margin-right:5px;margin-top:0;
+}
+body.compact .item-badges .badge-total{background:transparent;color:var(--ink2);font-size:10px;padding:0 4px;}
+body.compact .item-badges .badge-comp{background:transparent;color:var(--muted);font-size:10px;padding:0 4px;}
+body.compact .item-badges .badge-mod{background:transparent;color:var(--gold);font-size:10px;padding:0;}
+body.compact table.ct th{padding:2px 6px;font-size:9px;}
+body.compact table.ct td{padding:1px 6px;font-size:11px;}
+body.compact .unit-tag{padding:0 4px;font-size:9px;border-radius:2px;}
+body.compact .num{font-size:11px;}
+body.compact .mono{font-size:10px;}
+body.compact .no-comp{padding:3px 8px;font-size:11px;}
+body.compact .cost-calc{padding:2px 8px;margin:0 0 2px;}
+body.compact .cost-calc .val{font-size:11px;}
+body.compact .add-row-btn{padding:3px 8px;font-size:11px;margin:3px 6px;}
+body.compact .notes-input{font-size:10px;}
+
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;direction:rtl;font-size:14px}
 
 .topbar{background:var(--header);color:#fff;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.3)}
@@ -76,7 +108,9 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--i
 .ibt-add{background:rgba(255,255,255,.15);color:#fff}.ibt-add:hover{background:var(--accent)}
 
 table.ct{width:100%;border-collapse:collapse;font-size:var(--font-size-table)}
-table.ct th{background:#f5f8fc;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;padding:8px 12px;text-align:right;border-bottom:1px solid var(--line)}
+table.ct thead{position:sticky;top:56px;z-index:10;}
+table.ct th{background:#1a3f54;color:#d4e8f0;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.3px;padding:8px 12px;text-align:right;border-bottom:2px solid #0f2d3d;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body.compact table.ct thead{top:0;}
 table.ct td{padding:var(--row-py) 10px;border-bottom:1px solid #f2f5fb;vertical-align:middle}
 table.ct tr:last-child td{border-bottom:none}
 table.ct tr:hover td{background:#fafcff}
@@ -84,7 +118,24 @@ table.ct tr.editing-row td{background:#f0fff8}
 
 /* Borders toggle */
 body.show-borders table.ct td{border:1px solid var(--line)}
-body.show-borders table.ct th{border:1px solid #d0dbe8}
+body.show-borders table.ct th{border:1px solid #0f2d3d}
+
+/* Print stats footer */
+.print-stats-footer{display:none;}
+@media print{
+  .print-stats-footer{
+    display:block;
+    page-break-before:always;
+    padding:30px 20px;
+    font-family:'Segoe UI',Tahoma,sans-serif;
+    direction:rtl;
+  }
+  .print-stats-footer h2{font-size:16px;color:#0f2d3d;border-bottom:2px solid #0a6e5e;padding-bottom:8px;margin-bottom:18px;}
+  .print-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .print-stat-box{border:1px solid #ccc;border-radius:8px;padding:14px 16px;text-align:center;}
+  .print-stat-box .pv{font-size:28px;font-weight:700;color:#0a6e5e;line-height:1;}
+  .print-stat-box .pl{font-size:12px;color:#666;margin-top:5px;}
+}
 
 .mono{font-family:monospace;font-size:12px;color:var(--ink2)}
 .num{font-family:monospace;font-size:12.5px;color:var(--accent);font-weight:600}
@@ -140,9 +191,11 @@ body.show-borders table.ct th{border:1px solid #d0dbe8}
 @media print{
   .topbar,.upload-zone,.toolbar,.stats,.no-print,.head-actions,.add-row-btn,.changes-bar,.cost-calc,.saved-panel{display:none!important}
   .wrap{padding:0;max-width:100%}
-  .item-card{border:1px solid #bbb;margin-bottom:16px}
-  .item-head{background:#1a3a5c!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  table.ct th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .item-card{border:1px solid #bbb;margin-bottom:8px}
+  .item-head{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.compact .item-head{background:#f5f5f5!important;border-bottom:1px solid #bbb!important;}
+  body:not(.compact) .item-head{background:#1a3a5c!important;}
+  table.ct th{background:#1a3f54!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .ed-input,.notes-input{border:none!important;background:transparent!important;padding:0!important}
   .editing{border-color:#bbb!important;box-shadow:none!important}
   table.ct td{border:1px solid #ccc!important}
@@ -218,6 +271,7 @@ body.show-borders table.ct th{border:1px solid #d0dbe8}
     <button class="btn" style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="resetUpload()"><i class="ti ti-refresh"></i> ملف جديد</button>
   </div>
   <div id="content"></div>
+  <div class="print-stats-footer" id="printStatsFooter" style="display:none"></div>
 </div>
 
 <script>
@@ -418,6 +472,19 @@ function showStats(){
     <div class="stat"><div class="v">${totalCost.toFixed(2)}</div><div class="l">إجمالي التكاليف</div></div>
     <div class="stat${modified?' warn':''}"><div class="v">${modified}</div><div class="l">معدّلة</div></div>`;
   show('statsBar');
+  // update print footer
+  const pf=document.getElementById('printStatsFooter');
+  if(pf){
+    pf.style.display='';
+    pf.innerHTML=`<h2>ملخص البيانات</h2><div class="print-stats-grid">
+      <div class="print-stat-box"><div class="pv">${total}</div><div class="pl">إجمالي الأصناف</div></div>
+      <div class="print-stat-box"><div class="pv">${withComp}</div><div class="pl">أصناف لها مكونات</div></div>
+      <div class="print-stat-box"><div class="pv">${totalComp}</div><div class="pl">إجمالي المكونات</div></div>
+      <div class="print-stat-box"><div class="pv">${totalCost.toFixed(2)}</div><div class="pl">إجمالي التكاليف</div></div>
+      <div class="print-stat-box"><div class="pv">${total-withComp}</div><div class="pl">أصناف بدون مكونات</div></div>
+      <div class="print-stat-box"><div class="pv">${modified}</div><div class="pl">أصناف معدّلة</div></div>
+    </div>`;
+  }
 }
 
 /* ─── Filter/Sort ─── */
@@ -681,18 +748,41 @@ function toggleBorders(){
   btn.innerHTML=showBorders?'<i class="ti ti-border-none"></i> إخفاء الحدود':'<i class="ti ti-border-all"></i> حدود';
 }
 
-/* ─── Export Excel with merge ─── */
+/* ─── Export Excel with merge + center align + colored header ─── */
+function applyXlsxStyles(ws, aoa, mergeCells){
+  // Center alignment style for all cells
+  const centerStyle={alignment:{horizontal:'center',vertical:'center',wrapText:true}};
+  const headerStyle={
+    alignment:{horizontal:'center',vertical:'center',wrapText:true},
+    font:{bold:true,color:{rgb:'FFFFFF'},sz:11},
+    fill:{patternType:'solid',fgColor:{rgb:'0F2D3D'}},
+    border:{
+      top:{style:'thin',color:{rgb:'FFFFFF'}},
+      bottom:{style:'thin',color:{rgb:'FFFFFF'}},
+      left:{style:'thin',color:{rgb:'FFFFFF'}},
+      right:{style:'thin',color:{rgb:'FFFFFF'}}
+    }
+  };
+  const range=XLSX.utils.decode_range(ws['!ref']||'A1');
+  for(let R=range.s.r;R<=range.e.r;R++){
+    for(let C=range.s.c;C<=range.e.c;C++){
+      const addr=XLSX.utils.encode_cell({r:R,c:C});
+      if(!ws[addr])ws[addr]={t:'z',v:''};
+      ws[addr].s=R===0?headerStyle:centerStyle;
+    }
+  }
+}
+
 function exportExcel(){
   if(!allItems.length)return;
   const items=getFiltered();
   const wb=XLSX.utils.book_new();
 
-  // Header row
   const headers=['رقم الصنف','اسم الصنف','التكلفة الإجمالية','رقم المكوّن','اسم المكوّن','الكمية','الوحدة','التكلفة','المجموع','ملاحظات المكوّن','ملاحظات الصنف','معدّل'];
   const aoa=[headers];
   const mergeCells=[];
 
-  let rowIdx=1; // 0-based, row 0 is header
+  let rowIdx=1;
   for(const item of items){
     const compCount=Math.max(item.components.length,1);
     if(!item.components.length){
@@ -708,7 +798,6 @@ function exportExcel(){
         }
       }
       if(compCount>1){
-        // Merge columns 0,1,2 (code, name, total) and col 10 (item notes) and col 11 (modified)
         mergeCells.push({s:{r:rowIdx,c:0},e:{r:rowIdx+compCount-1,c:0}});
         mergeCells.push({s:{r:rowIdx,c:1},e:{r:rowIdx+compCount-1,c:1}});
         mergeCells.push({s:{r:rowIdx,c:2},e:{r:rowIdx+compCount-1,c:2}});
@@ -722,9 +811,8 @@ function exportExcel(){
   const ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!merges']=mergeCells;
   ws['!cols']=[10,28,12,10,28,10,8,10,10,22,22,8].map(w=>({wch:w}));
-
-  // Freeze first row
   ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft',state:'frozen'};
+  applyXlsxStyles(ws,aoa,mergeCells);
 
   XLSX.utils.book_append_sheet(wb,ws,'مكونات الأصناف');
   XLSX.writeFile(wb,'مكونات_الأصناف.xlsx');
@@ -762,6 +850,7 @@ function exportModified(){
   ws['!merges']=mergeCells;
   ws['!cols']=[10,28,12,10,28,10,8,10,10,22,22].map(w=>({wch:w}));
   ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft',state:'frozen'};
+  applyXlsxStyles(ws,aoa,mergeCells);
   XLSX.utils.book_append_sheet(wb,ws,'الأصناف المعدّلة');
   XLSX.writeFile(wb,'الأصناف_المعدّلة.xlsx');
 }
@@ -774,6 +863,7 @@ function resetUpload(){
   document.getElementById('btnExport').style.display='none';
   document.getElementById('btnExportMod').style.display='none';
   document.getElementById('btnUndo').style.display='none';
+  const pf=document.getElementById('printStatsFooter');if(pf)pf.style.display='none';
   uz.style.display='';
   renderSavedPanel();
 }
