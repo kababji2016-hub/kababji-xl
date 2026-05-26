@@ -12,7 +12,9 @@
   --bg:#f0f4f9;--card:#ffffff;--accent:#0a6e5e;--accent2:#0d8a76;
   --accent-bg:#e6f5f2;--header:#0f2d3d;--gold:#c4922a;--radius:12px;
   --danger:#c62828;--warn-bg:#fff8e1;--warn:#f57f17;
+  --row-py:7px;--font-size-table:13px;
 }
+body.compact{--row-py:3px;--font-size-table:12px;}
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;direction:rtl;font-size:14px}
 
 .topbar{background:var(--header);color:#fff;padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.3)}
@@ -73,12 +75,17 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--i
 .ibt-del{background:rgba(255,80,80,.2);color:#ffaaaa}.ibt-del:hover{background:rgba(255,50,50,.4);color:#fff}
 .ibt-add{background:rgba(255,255,255,.15);color:#fff}.ibt-add:hover{background:var(--accent)}
 
-table.ct{width:100%;border-collapse:collapse;font-size:13px}
+table.ct{width:100%;border-collapse:collapse;font-size:var(--font-size-table)}
 table.ct th{background:#f5f8fc;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.3px;padding:8px 12px;text-align:right;border-bottom:1px solid var(--line)}
-table.ct td{padding:7px 10px;border-bottom:1px solid #f2f5fb;vertical-align:middle}
+table.ct td{padding:var(--row-py) 10px;border-bottom:1px solid #f2f5fb;vertical-align:middle}
 table.ct tr:last-child td{border-bottom:none}
 table.ct tr:hover td{background:#fafcff}
 table.ct tr.editing-row td{background:#f0fff8}
+
+/* Borders toggle */
+body.show-borders table.ct td{border:1px solid var(--line)}
+body.show-borders table.ct th{border:1px solid #d0dbe8}
+
 .mono{font-family:monospace;font-size:12px;color:var(--ink2)}
 .num{font-family:monospace;font-size:12.5px;color:var(--accent);font-weight:600}
 .unit-tag{display:inline-block;background:var(--accent-bg);color:var(--accent);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
@@ -120,14 +127,25 @@ table.ct tr.editing-row td{background:#f0fff8}
 .cost-calc .lbl{color:var(--muted)}
 .cost-calc .val{font-family:monospace;font-weight:700;color:var(--accent);font-size:13px}
 
+/* Saved files panel */
+.saved-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:18px}
+.saved-panel h3{font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.saved-list{display:flex;flex-wrap:wrap;gap:8px}
+.saved-item{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;transition:all .15s}
+.saved-item:hover{border-color:var(--accent);background:var(--accent-bg)}
+.saved-item .del-saved{background:none;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:13px;line-height:1;margin-right:2px}
+.saved-item .del-saved:hover{color:var(--danger)}
+.saved-item .meta{font-size:10px;color:var(--muted);display:block}
+
 @media print{
-  .topbar,.upload-zone,.toolbar,.stats,.no-print,.head-actions,.add-row-btn,.changes-bar,.cost-calc{display:none!important}
+  .topbar,.upload-zone,.toolbar,.stats,.no-print,.head-actions,.add-row-btn,.changes-bar,.cost-calc,.saved-panel{display:none!important}
   .wrap{padding:0;max-width:100%}
   .item-card{border:1px solid #bbb;margin-bottom:16px}
   .item-head{background:#1a3a5c!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   table.ct th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .ed-input,.notes-input{border:none!important;background:transparent!important;padding:0!important}
   .editing{border-color:#bbb!important;box-shadow:none!important}
+  table.ct td{border:1px solid #ccc!important}
 }
 </style>
 </head>
@@ -139,9 +157,9 @@ table.ct tr.editing-row td{background:#f0fff8}
     <div><h1>مكونات الأصناف</h1><span>ارفع · عدّل · صدّر · اطبع</span></div>
   </div>
   <div class="topbar-btns">
-    <div class="tooltip-wrap">
-      <button class="btn bg" onclick="window.print()"><i class="ti ti-printer"></i> طباعة</button>
-    </div>
+    <button class="btn bg" onclick="window.print()"><i class="ti ti-printer"></i> طباعة</button>
+    <button class="btn bg" onclick="toggleCompact()" id="btnCompact"><i class="ti ti-layout-rows"></i> اقتصادي</button>
+    <button class="btn bg" onclick="toggleBorders()" id="btnBorders"><i class="ti ti-border-all"></i> حدود</button>
     <button id="btnUndo" class="btn bg" onclick="undoLast()" style="display:none"><i class="ti ti-arrow-back-up"></i> تراجع</button>
     <button id="btnExport" class="btn gr" onclick="exportExcel()" style="display:none"><i class="ti ti-file-spreadsheet"></i> تصدير Excel</button>
     <button id="btnExportMod" class="btn gld" onclick="exportModified()" style="display:none"><i class="ti ti-sparkles"></i> تصدير المعدّل فقط</button>
@@ -154,12 +172,22 @@ table.ct tr.editing-row td{background:#f0fff8}
     <div class="ico">📂</div>
     <h2>ارفع ملف Excel هنا</h2>
     <p>اسحب وأفلت · أو انقر للاختيار · يدعم .xls و .xlsx</p>
+    <div style="margin-top:16px">
+      <button class="btn gr" onclick="event.stopPropagation();startEmpty()" style="font-size:13px;padding:8px 18px"><i class="ti ti-plus"></i> إنشاء قائمة جديدة فارغة</button>
+    </div>
   </div>
+
+  <div id="savedPanel" class="saved-panel no-print" style="display:none">
+    <h3><i class="ti ti-history" style="font-size:15px;color:var(--accent)"></i> الملفات المحفوظة مسبقاً</h3>
+    <div class="saved-list" id="savedList"></div>
+  </div>
+
   <div id="errorBox" class="err-box" style="display:none"></div>
   <div id="changesBar" class="changes-bar no-print" style="display:none">
     <i class="ti ti-alert-circle"></i>
     <span id="changesText">لديك تعديلات غير محفوظة في التصدير</span>
-    <button class="btn gr" onclick="exportExcel()" style="padding:4px 10px;font-size:11px"><i class="ti ti-download"></i> تصدير الآن</button>
+    <button class="btn gr" onclick="saveToStorage()" style="padding:4px 10px;font-size:11px"><i class="ti ti-device-floppy"></i> حفظ</button>
+    <button class="btn gr" onclick="exportExcel()" style="padding:4px 10px;font-size:11px"><i class="ti ti-download"></i> تصدير</button>
   </div>
   <div id="statsBar" class="stats no-print" style="display:none"></div>
   <div id="toolbar" class="toolbar no-print" style="display:none">
@@ -186,14 +214,74 @@ table.ct tr.editing-row td{background:#f0fff8}
       <option value="noted">ذات ملاحظات</option>
     </select>
     <div class="sep"></div>
+    <button class="btn gr" onclick="addNewItem()" style="font-size:12px"><i class="ti ti-plus"></i> صنف جديد</button>
     <button class="btn" style="background:var(--bg);color:var(--ink);border:1px solid var(--line)" onclick="resetUpload()"><i class="ti ti-refresh"></i> ملف جديد</button>
   </div>
   <div id="content"></div>
 </div>
 
 <script>
-let allItems=[], history=[], editingItems={};
+let allItems=[], undoStack=[], editingItems={};
+let currentFileName='';
+let isCompact=false, showBorders=false;
 
+/* ─── Storage ─── */
+const STORAGE_KEY='items_db_v2';
+
+function saveToStorage(name){
+  if(!allItems.length)return;
+  const saveName=name||currentFileName||('قائمة_'+new Date().toLocaleDateString('ar'));
+  const db=loadDB();
+  db[saveName]={items:JSON.parse(JSON.stringify(allItems)),savedAt:Date.now()};
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
+  currentFileName=saveName;
+  renderSavedPanel();
+  showToast('تم الحفظ: '+saveName);
+}
+
+function loadDB(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}catch{return{}}
+}
+
+function renderSavedPanel(){
+  const db=loadDB();
+  const keys=Object.keys(db);
+  const panel=document.getElementById('savedPanel');
+  if(!keys.length){panel.style.display='none';return}
+  panel.style.display='';
+  document.getElementById('savedList').innerHTML=keys.map(k=>{
+    const d=new Date(db[k].savedAt);
+    const cnt=db[k].items.length;
+    return`<div class="saved-item" onclick="loadFromStorage('${escH(k)}')">
+      <i class="ti ti-file-text" style="font-size:14px;color:var(--accent)"></i>
+      <div><strong style="font-size:12px">${escH(k)}</strong><span class="meta">${cnt} صنف · ${d.toLocaleDateString('ar')}</span></div>
+      <button class="del-saved" onclick="event.stopPropagation();deleteSaved('${escH(k)}')" title="حذف"><i class="ti ti-x" style="font-size:12px"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function loadFromStorage(name){
+  const db=loadDB();
+  if(!db[name])return;
+  allItems=JSON.parse(JSON.stringify(db[name].items));
+  allItems.forEach((it,i)=>{it._id=it._id??i;it._modified=false;it.notes=it.notes||'';it.components.forEach((c,j)=>{c._id=c._id??j;c._modified=false;c.notes=c.notes||''})});
+  currentFileName=name;
+  undoStack=[];editingItems={};
+  showStats();show('toolbar');show('statsBar');
+  document.getElementById('btnExport').style.display='inline-flex';
+  document.getElementById('uploadZone').style.display='none';
+  renderItems();
+  updateChangesBar();
+}
+
+function deleteSaved(name){
+  if(!confirm('حذف "'+name+'" من المحفوظات؟'))return;
+  const db=loadDB();delete db[name];
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(db));
+  renderSavedPanel();
+}
+
+/* ─── Upload ─── */
 const uz=document.getElementById('uploadZone');
 uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag')});
 uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
@@ -211,18 +299,42 @@ function processFile(file){
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,blankrows:true});
       allItems=smartParse(rows);
-      if(!allItems.length){showError('لم يتم التعرف على بيانات. تأكد أن الملف يحتوي مكونات أصناف.');document.getElementById('content').innerHTML='';return;}
+      if(!allItems.length){showError('لم يتم التعرف على بيانات.');document.getElementById('content').innerHTML='';return;}
       allItems.forEach((it,i)=>{it._id=i;it._modified=false;it.notes=it.notes||'';it.components.forEach((c,j)=>{c._id=j;c._modified=false;c.notes=c.notes||''})});
-      history=[];editingItems={};
+      currentFileName=file.name.replace(/\.[^.]+$/,'');
+      undoStack=[];editingItems={};
       showStats();show('toolbar');show('statsBar');
       document.getElementById('btnExport').style.display='inline-flex';
       uz.style.display='none';
+      saveToStorage(currentFileName);
       renderItems();
     }catch(err){showError('تعذّر قراءة الملف: '+err.message);document.getElementById('content').innerHTML=''}
   };
   reader.readAsArrayBuffer(file);
 }
 
+function startEmpty(){
+  allItems=[];undoStack=[];editingItems={};
+  currentFileName='قائمة_جديدة_'+Date.now();
+  showStats();show('toolbar');show('statsBar');
+  document.getElementById('btnExport').style.display='inline-flex';
+  uz.style.display='none';
+  document.getElementById('content').innerHTML='<div class="state-box"><div class="ico">📋</div><h3>قائمة فارغة</h3><p>استخدم زر "صنف جديد" لإضافة أصناف</p></div>';
+  updateChangesBar();
+}
+
+function addNewItem(){
+  undoStack.push(JSON.parse(JSON.stringify(allItems)));
+  document.getElementById('btnUndo').style.display='inline-flex';
+  const newId=allItems.length?Math.max(...allItems.map(i=>i._id))+1:0;
+  const item={_id:newId,code:'',name:'صنف جديد',total:0,components:[],notes:'',_modified:true};
+  allItems.unshift(item);
+  showStats();updateChangesBar();
+  renderItems();
+  setTimeout(()=>startEdit(newId),50);
+}
+
+/* ─── Parse ─── */
 function cs(v){return(v===null||v===undefined)?'':String(v).trim()}
 function escH(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function show(id){document.getElementById(id).style.display=''}
@@ -291,6 +403,7 @@ function parseFormatA(rows){
   return items.filter(it=>it.name);
 }
 
+/* ─── Stats ─── */
 function showStats(){
   const bar=document.getElementById('statsBar');
   const total=allItems.length;
@@ -307,6 +420,7 @@ function showStats(){
   show('statsBar');
 }
 
+/* ─── Filter/Sort ─── */
 function getFiltered(){
   const q=(document.getElementById('searchInput').value||'').toLowerCase();
   const sort=document.getElementById('sortSelect').value;
@@ -327,10 +441,12 @@ function getFiltered(){
   return items;
 }
 
+/* ─── Render ─── */
 function renderItems(){
   const items=getFiltered();
   const el=document.getElementById('content');
-  if(!items.length){el.innerHTML='<div class="state-box"><div class="ico">🔍</div><h3>لا توجد نتائج</h3><p>جرّب تغيير معايير البحث أو الفلتر</p></div>';return}
+  if(!items.length&&allItems.length){el.innerHTML='<div class="state-box"><div class="ico">🔍</div><h3>لا توجد نتائج</h3><p>جرّب تغيير معايير البحث أو الفلتر</p></div>';return}
+  if(!allItems.length){el.innerHTML='<div class="state-box"><div class="ico">📋</div><h3>القائمة فارغة</h3><p>اضغط "صنف جديد" لإضافة صنف</p></div>';return}
   el.innerHTML=`<div class="items">${items.map(item=>buildCard(item)).join('')}</div>`;
 }
 
@@ -402,6 +518,7 @@ function buildRow(itemId,c,isEd){
   </tr>`;
 }
 
+/* ─── Edit helpers ─── */
 function autoCalcRow(itemId,compId){
   const qty=parseFloat(document.getElementById(`rq-${itemId}-${compId}`)?.value)||0;
   const cost=parseFloat(document.getElementById(`rco-${itemId}-${compId}`)?.value)||0;
@@ -411,7 +528,6 @@ function autoCalcRow(itemId,compId){
 
 function updateCalc(itemId){
   const item=allItems.find(i=>i._id===itemId);if(!item)return;
-  const tbody=document.getElementById(`tbody-${itemId}`);if(!tbody)return;
   let sum=0;
   item.components.forEach(c=>{const t=parseFloat(document.getElementById(`rt-${itemId}-${c._id}`)?.value)||0;sum+=t});
   const el=document.getElementById(`calc-${itemId}`);if(el)el.textContent=sum.toFixed(4);
@@ -425,6 +541,10 @@ function startEdit(itemId){
 
 function saveEdit(itemId){
   const item=allItems.find(i=>i._id===itemId);if(!item)return;
+  // snapshot BEFORE saving (for undo)
+  undoStack.push(JSON.parse(JSON.stringify(allItems)));
+  document.getElementById('btnUndo').style.display='inline-flex';
+
   const nameEl=document.getElementById(`inp-name-${itemId}`);
   const codeEl=document.getElementById(`inp-code-${itemId}`);
   const notesEl=document.getElementById(`item-notes-${itemId}`);
@@ -446,7 +566,7 @@ function saveEdit(itemId){
   item._modified=true;
   delete editingItems[itemId];
   showStats();updateChangesBar();
-  document.getElementById('btnUndo').style.display='inline-flex';
+  autoSave();
   refreshCard(itemId);
 }
 
@@ -463,46 +583,82 @@ function markMod(itemId){
 
 function deleteItem(itemId){
   if(!confirm('هل تريد حذف هذا الصنف نهائياً؟'))return;
-  history.push(JSON.parse(JSON.stringify(allItems)));
+  undoStack.push(JSON.parse(JSON.stringify(allItems)));
   allItems=allItems.filter(i=>i._id!==itemId);
   delete editingItems[itemId];
   showStats();updateChangesBar();
   document.getElementById('btnUndo').style.display='inline-flex';
+  autoSave();
   renderItems();
 }
 
 function deleteRow(itemId,compId){
   const item=allItems.find(i=>i._id===itemId);if(!item)return;
+  // snapshot for undo (row deletion within editing mode)
+  // we store it in editingItems snapshot is already there; just update item
   item.components=item.components.filter(c=>c._id!==compId);
   item._modified=true;
   updateCalc(itemId);
   const tr=document.getElementById(`row-${itemId}-${compId}`);if(tr)tr.remove();
   const badge=document.querySelector(`#card-${itemId} .badge-comp`);if(badge)badge.textContent=`${item.components.length} مكوّن`;
+  const calcDiv=document.getElementById(`calc-${itemId}`);
+  if(calcDiv){const newTotal=item.components.reduce((s,c)=>{const el=document.getElementById(`rt-${itemId}-${c._id}`);return s+(el?parseFloat(el.value)||0:c.total)},0);calcDiv.textContent=newTotal.toFixed(4);}
 }
 
 function addRow(itemId){
   const item=allItems.find(i=>i._id===itemId);if(!item)return;
-  const newId=Math.max(0,...item.components.map(c=>c._id))+1;
+  const newId=(item.components.length?Math.max(...item.components.map(c=>c._id))+1:0);
   const c={_id:newId,code:'',name:'',unit:'',qty:0,cost:0,total:0,notes:''};
   item.components.push(c);item._modified=true;
   const tbody=document.getElementById(`tbody-${itemId}`);
-  if(tbody){const tr=document.createElement('tr');tr.id=`row-${itemId}-${newId}`;tr.className='editing-row';tr.innerHTML=buildRow(itemId,c,true).replace(/^<tr[^>]*>/,'').replace(/<\/tr>$/,'');tbody.appendChild(tr)}
+  if(tbody){
+    const tmp=document.createElement('tbody');
+    tmp.innerHTML=buildRow(itemId,c,true);
+    const tr=tmp.firstChild;
+    tr.id=`row-${itemId}-${newId}`;
+    tbody.appendChild(tr);
+  }
   const badge=document.querySelector(`#card-${itemId} .badge-comp`);if(badge)badge.textContent=`${item.components.length} مكوّن`;
+  // show calc bar if first component
+  if(item.components.length===1){
+    const existing=document.getElementById(`calc-${itemId}`);
+    if(!existing){
+      const costDiv=document.createElement('div');
+      costDiv.className='cost-calc';
+      costDiv.innerHTML=`<span class="lbl">مجموع التكاليف المحسوبة:</span><span class="val" id="calc-${itemId}">0.0000</span>`;
+      const table=document.querySelector(`#card-${itemId} table.ct`);
+      if(table)table.before(costDiv);
+    }
+  }
 }
 
+/* ─── Undo ─── */
 function undoLast(){
-  if(!history.length)return;
-  allItems=history.pop();
+  if(!undoStack.length)return;
+  allItems=undoStack.pop();
   editingItems={};
-  if(!history.length)document.getElementById('btnUndo').style.display='none';
-  showStats();updateChangesBar();renderItems();
+  if(!undoStack.length)document.getElementById('btnUndo').style.display='none';
+  showStats();updateChangesBar();
+  autoSave();
+  renderItems();
 }
 
+/* ─── Changes bar ─── */
 function updateChangesBar(){
   const mods=allItems.filter(i=>i._modified).length;
   const cb=document.getElementById('changesBar');
-  if(mods>0){document.getElementById('changesText').textContent=`لديك ${mods} صنف معدّل — تذكّر التصدير لحفظ التغييرات`;show('changesBar');document.getElementById('btnExportMod').style.display='inline-flex'}
-  else{hide('changesBar');document.getElementById('btnExportMod').style.display='none'}
+  if(mods>0){
+    document.getElementById('changesText').textContent=`لديك ${mods} صنف معدّل`;
+    show('changesBar');
+    document.getElementById('btnExportMod').style.display='inline-flex';
+  }else{
+    hide('changesBar');
+    document.getElementById('btnExportMod').style.display='none';
+  }
+}
+
+function autoSave(){
+  if(currentFileName)saveToStorage(currentFileName);
 }
 
 function refreshCard(itemId){
@@ -511,17 +667,65 @@ function refreshCard(itemId){
   if(card){const tmp=document.createElement('div');tmp.innerHTML=buildCard(item);card.replaceWith(tmp.firstChild)}
 }
 
+/* ─── UI toggles ─── */
+function toggleCompact(){
+  isCompact=!isCompact;
+  document.body.classList.toggle('compact',isCompact);
+  const btn=document.getElementById('btnCompact');
+  btn.innerHTML=isCompact?'<i class="ti ti-layout-rows"></i> عادي':'<i class="ti ti-layout-rows"></i> اقتصادي';
+}
+function toggleBorders(){
+  showBorders=!showBorders;
+  document.body.classList.toggle('show-borders',showBorders);
+  const btn=document.getElementById('btnBorders');
+  btn.innerHTML=showBorders?'<i class="ti ti-border-none"></i> إخفاء الحدود':'<i class="ti ti-border-all"></i> حدود';
+}
+
+/* ─── Export Excel with merge ─── */
 function exportExcel(){
   if(!allItems.length)return;
   const items=getFiltered();
   const wb=XLSX.utils.book_new();
-  const rows=[['رقم الصنف','اسم الصنف','التكلفة الإجمالية','رقم المكوّن','اسم المكوّن','الكمية','الوحدة','التكلفة','المجموع','ملاحظات المكوّن','ملاحظات الصنف','معدّل']];
+
+  // Header row
+  const headers=['رقم الصنف','اسم الصنف','التكلفة الإجمالية','رقم المكوّن','اسم المكوّن','الكمية','الوحدة','التكلفة','المجموع','ملاحظات المكوّن','ملاحظات الصنف','معدّل'];
+  const aoa=[headers];
+  const mergeCells=[];
+
+  let rowIdx=1; // 0-based, row 0 is header
   for(const item of items){
-    if(!item.components.length)rows.push([item.code,item.name,item.total,'','','','','','',item.notes||'',item.notes||'',item._modified?'نعم':'']);
-    else for(const c of item.components)rows.push([item.code,item.name,item.total,c.code,c.name,c.qty,c.unit,c.cost,c.total,c.notes||'',item.notes||'',item._modified?'نعم':'']);
+    const compCount=Math.max(item.components.length,1);
+    if(!item.components.length){
+      aoa.push([item.code,item.name,item.total,'','','','','','',item.notes||'',item.notes||'',item._modified?'نعم':'']);
+      rowIdx++;
+    } else {
+      for(let ci=0;ci<item.components.length;ci++){
+        const c=item.components[ci];
+        if(ci===0){
+          aoa.push([item.code,item.name,item.total,c.code,c.name,c.qty,c.unit,c.cost,c.total,c.notes||'',item.notes||'',item._modified?'نعم':'']);
+        } else {
+          aoa.push(['','',null,c.code,c.name,c.qty,c.unit,c.cost,c.total,c.notes||'',item.notes||'','']);
+        }
+      }
+      if(compCount>1){
+        // Merge columns 0,1,2 (code, name, total) and col 10 (item notes) and col 11 (modified)
+        mergeCells.push({s:{r:rowIdx,c:0},e:{r:rowIdx+compCount-1,c:0}});
+        mergeCells.push({s:{r:rowIdx,c:1},e:{r:rowIdx+compCount-1,c:1}});
+        mergeCells.push({s:{r:rowIdx,c:2},e:{r:rowIdx+compCount-1,c:2}});
+        mergeCells.push({s:{r:rowIdx,c:10},e:{r:rowIdx+compCount-1,c:10}});
+        mergeCells.push({s:{r:rowIdx,c:11},e:{r:rowIdx+compCount-1,c:11}});
+      }
+      rowIdx+=compCount;
+    }
   }
-  const ws=XLSX.utils.aoa_to_sheet(rows);
+
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=mergeCells;
   ws['!cols']=[10,28,12,10,28,10,8,10,10,22,22,8].map(w=>({wch:w}));
+
+  // Freeze first row
+  ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft',state:'frozen'};
+
   XLSX.utils.book_append_sheet(wb,ws,'مكونات الأصناف');
   XLSX.writeFile(wb,'مكونات_الأصناف.xlsx');
 }
@@ -531,19 +735,39 @@ function exportModified(){
   const items=allItems.filter(i=>i._modified);
   if(!items.length){alert('لا توجد أصناف معدّلة.');return}
   const wb=XLSX.utils.book_new();
-  const rows=[['رقم الصنف','اسم الصنف','التكلفة الإجمالية','رقم المكوّن','اسم المكوّن','الكمية','الوحدة','التكلفة','المجموع','ملاحظات المكوّن','ملاحظات الصنف']];
+  const headers=['رقم الصنف','اسم الصنف','التكلفة الإجمالية','رقم المكوّن','اسم المكوّن','الكمية','الوحدة','التكلفة','المجموع','ملاحظات المكوّن','ملاحظات الصنف'];
+  const aoa=[headers];
+  const mergeCells=[];
+  let rowIdx=1;
   for(const item of items){
-    if(!item.components.length)rows.push([item.code,item.name,item.total,'','','','','','',item.notes||'',item.notes||'']);
-    else for(const c of item.components)rows.push([item.code,item.name,item.total,c.code,c.name,c.qty,c.unit,c.cost,c.total,c.notes||'',item.notes||'']);
+    const compCount=Math.max(item.components.length,1);
+    if(!item.components.length){
+      aoa.push([item.code,item.name,item.total,'','','','','','',item.notes||'',item.notes||'']);
+      rowIdx++;
+    }else{
+      for(let ci=0;ci<item.components.length;ci++){
+        const c=item.components[ci];
+        aoa.push(ci===0?[item.code,item.name,item.total,c.code,c.name,c.qty,c.unit,c.cost,c.total,c.notes||'',item.notes||'']:['','',null,c.code,c.name,c.qty,c.unit,c.cost,c.total,c.notes||'',item.notes||'']);
+      }
+      if(compCount>1){
+        mergeCells.push({s:{r:rowIdx,c:0},e:{r:rowIdx+compCount-1,c:0}});
+        mergeCells.push({s:{r:rowIdx,c:1},e:{r:rowIdx+compCount-1,c:1}});
+        mergeCells.push({s:{r:rowIdx,c:2},e:{r:rowIdx+compCount-1,c:2}});
+        mergeCells.push({s:{r:rowIdx,c:10},e:{r:rowIdx+compCount-1,c:10}});
+      }
+      rowIdx+=compCount;
+    }
   }
-  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=mergeCells;
   ws['!cols']=[10,28,12,10,28,10,8,10,10,22,22].map(w=>({wch:w}));
+  ws['!freeze']={xSplit:0,ySplit:1,topLeftCell:'A2',activePane:'bottomLeft',state:'frozen'};
   XLSX.utils.book_append_sheet(wb,ws,'الأصناف المعدّلة');
   XLSX.writeFile(wb,'الأصناف_المعدّلة.xlsx');
 }
 
 function resetUpload(){
-  allItems=[];history=[];editingItems={};
+  allItems=[];undoStack=[];editingItems={};currentFileName='';
   hide('statsBar');hide('toolbar');hide('errorBox');hide('changesBar');
   document.getElementById('content').innerHTML='';
   document.getElementById('fileInput').value='';
@@ -551,7 +775,19 @@ function resetUpload(){
   document.getElementById('btnExportMod').style.display='none';
   document.getElementById('btnUndo').style.display='none';
   uz.style.display='';
+  renderSavedPanel();
 }
+
+/* ─── Toast ─── */
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;padding:8px 20px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s';document.body.appendChild(t)}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._to);t._to=setTimeout(()=>t.style.opacity='0',2200);
+}
+
+/* ─── Init ─── */
+renderSavedPanel();
 </script>
 </body>
 </html>
